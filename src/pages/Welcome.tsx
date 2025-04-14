@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, LogIn } from "lucide-react";
+import { CheckCircle, LogIn, UserPlus } from "lucide-react";
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -36,10 +36,16 @@ const Welcome = () => {
           </ul>
         </div>
         
-        <Button size="lg" onClick={() => navigate("/login")}>
-          <LogIn className="mr-2 h-5 w-5" />
-          로그인하고 시작하기
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button size="lg" onClick={() => navigate("/login")}>
+            <LogIn className="mr-2 h-5 w-5" />
+            로그인하기
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate("/register")}>
+            <UserPlus className="mr-2 h-5 w-5" />
+            회원가입하기
+          </Button>
+        </div>
       </div>
     </div>
   );

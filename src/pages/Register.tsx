@@ -5,23 +5,34 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogIn } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
-const Login = () => {
+const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    
+    if (!email || !password || !confirmPassword) {
       toast({
         title: "오류",
-        description: "이메일과 비밀번호를 모두 입력해주세요.",
+        description: "모든 필드를 입력해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast({
+        title: "오류",
+        description: "비밀번호가 일치하지 않습니다.",
         variant: "destructive",
       });
       return;
@@ -29,16 +40,16 @@ const Login = () => {
 
     try {
       setIsLoading(true);
-      await login(email, password);
+      await register(email, password);
       toast({
-        title: "로그인 성공",
-        description: "환영합니다!",
+        title: "회원가입 성공",
+        description: "로그인하여 서비스를 이용하세요.",
       });
-      navigate("/todos");
+      navigate("/login");
     } catch (error) {
       toast({
-        title: "로그인 실패",
-        description: "이메일 또는 비밀번호가 올바르지 않습니다.",
+        title: "회원가입 실패",
+        description: "이미 등록된 이메일이거나 오류가 발생했습니다.",
         variant: "destructive",
       });
     } finally {
@@ -50,8 +61,8 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-secondary to-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl">로그인</CardTitle>
-          <CardDescription>할 일 관리 서비스를 이용하려면 로그인하세요.</CardDescription>
+          <CardTitle className="text-2xl">회원가입</CardTitle>
+          <CardDescription>할 일 관리 서비스에 가입하세요.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
@@ -77,20 +88,31 @@ const Login = () => {
                 required
               />
             </div>
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium">비밀번호 확인</label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="비밀번호를 다시 입력하세요"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
-                "로그인 중..."
+                "가입 중..."
               ) : (
                 <>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  로그인
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  회원가입
                 </>
               )}
             </Button>
-            <Button type="button" variant="outline" className="w-full" onClick={() => navigate("/register")}>
-              계정이 없으신가요? 회원가입
+            <Button type="button" variant="outline" className="w-full" onClick={() => navigate("/login")}>
+              이미 계정이 있으신가요? 로그인
             </Button>
           </CardFooter>
         </form>
@@ -99,4 +121,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
