@@ -27,7 +27,7 @@ const Header = () => {
         <div className="flex gap-2">
           {user ? (
             <>
-              <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>
+              <Button variant="outline" size="sm">
                 <User className="mr-2 h-4 w-4" />
                 {user.email}
               </Button>
