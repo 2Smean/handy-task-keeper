@@ -7,11 +7,16 @@ import TaskInput from "@/components/TaskInput";
 import TaskList from "@/components/TaskList";
 import TaskStats from "@/components/TaskStats";
 import { Task, Priority } from "@/types/task";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>(() => {
-    // Load tasks from localStorage
-    const savedTasks = localStorage.getItem("tasks");
+    // 사용자별 localStorage 키 생성
+    const userTaskKey = `tasks_${user?.email}`;
+    
+    // 해당 사용자의 tasks 데이터 로드
+    const savedTasks = localStorage.getItem(userTaskKey);
     if (savedTasks) {
       try {
         // Parse the saved tasks and convert createdAt strings back to Date objects
@@ -29,10 +34,13 @@ const Index = () => {
 
   const { toast } = useToast();
 
-  // Save tasks to localStorage whenever they change
+  // 사용자별 localStorage에 tasks 저장
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    if (user) {
+      const userTaskKey = `tasks_${user.email}`;
+      localStorage.setItem(userTaskKey, JSON.stringify(tasks));
+    }
+  }, [tasks, user]);
 
   const addTask = (title: string, priority: Priority) => {
     const newTask: Task = {
