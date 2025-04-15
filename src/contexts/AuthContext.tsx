@@ -1,26 +1,8 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { createClient, SupabaseClient, Provider } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { useToast } from "@/components/ui/use-toast";
-
-// 환경 변수 확인 및 로깅
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-console.log("Supabase URL:", supabaseUrl ? "설정됨" : "설정되지 않음");
-console.log("Supabase Key:", supabaseKey ? "설정됨" : "설정되지 않음");
-
-// Supabase 클라이언트 초기화 함수
-const initSupabase = () => {
-  if (!supabaseUrl || !supabaseKey) {
-    console.error("Supabase URL or key is missing. Please set the environment variables.");
-    return null;
-  }
-  return createClient(supabaseUrl, supabaseKey);
-};
-
-// 조건부 Supabase 클라이언트 초기화
-const supabase: SupabaseClient | null = initSupabase();
+import { supabase } from "@/integrations/supabase/client";
 
 // User 타입 정의
 interface User {
@@ -64,19 +46,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const supabaseInitialized = supabase !== null;
   
   useEffect(() => {
-    // 환경 변수가 설정되지 않은 경우 경고 표시
-    if (!supabaseInitialized) {
-      toast({
-        title: "Supabase 설정 오류",
-        description: "Supabase URL 또는 API 키가 설정되지 않았습니다. 환경 변수를 확인해주세요.",
-        variant: "destructive",
-      });
-      return;
-    }
+    console.log("Supabase 초기화 상태:", supabaseInitialized);
     
     // Supabase 세션 확인
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.email);
         if (session) {
           // 세션이 있으면 사용자 설정
           setUser({
@@ -105,6 +80,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const checkUser = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
+        console.log("Initial session found:", data.session.user.email);
         setUser({
           email: data.session.user.email || '',
           id: data.session.user.id
@@ -138,6 +114,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
     
     if (error) {
+      console.error("Google login error:", error);
       throw new Error(error.message);
     }
   };
@@ -162,6 +139,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
     
     if (error) {
+      console.error("Naver login error:", error);
       throw new Error(error.message);
     }
   };
