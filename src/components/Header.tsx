@@ -17,6 +17,10 @@ const Header = () => {
     navigate("/");
   };
 
+  const handleEmailClick = () => {
+    navigate(`/todos/${encodeURIComponent(user?.email || '')}`);
+  };
+
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-2">
@@ -27,7 +31,12 @@ const Header = () => {
         <div className="flex gap-2">
           {user ? (
             <>
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleEmailClick}
+                className="hover:bg-secondary"
+              >
                 <User className="mr-2 h-4 w-4" />
                 {user.email}
               </Button>
