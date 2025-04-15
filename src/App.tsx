@@ -10,6 +10,7 @@ import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import UserTasks from "./pages/UserTasks";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
