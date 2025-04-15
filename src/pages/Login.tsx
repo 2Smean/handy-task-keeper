@@ -5,15 +5,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogIn } from "lucide-react";
+import { LogIn, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login, loginWithGoogle, loginWithNaver } = useAuth();
+  const { login, loginWithGoogle, loginWithNaver, supabaseInitialized } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -84,6 +85,18 @@ const Login = () => {
           <CardTitle className="text-2xl">로그인</CardTitle>
           <CardDescription>할 일 관리 서비스를 이용하려면 로그인하세요.</CardDescription>
         </CardHeader>
+        
+        {!supabaseInitialized && (
+          <div className="px-6 mb-4">
+            <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="text-yellow-700">
+                Supabase 연결이 설정되지 않았습니다. 소셜 로그인은 사용할 수 없으며, 로컬 스토리지를 통한 로그인만 가능합니다.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -131,7 +144,7 @@ const Login = () => {
               variant="outline" 
               className="w-full bg-white text-black hover:bg-gray-100 border-gray-300 mb-2" 
               onClick={handleGoogleLogin}
-              disabled={isLoading}
+              disabled={isLoading || !supabaseInitialized}
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <path
@@ -159,7 +172,7 @@ const Login = () => {
               variant="outline" 
               className="w-full bg-[#03C75A] text-white hover:bg-[#03C75A]/90" 
               onClick={handleNaverLogin}
-              disabled={isLoading}
+              disabled={isLoading || !supabaseInitialized}
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M13.84 0H6.16C2.76 0 0 2.76 0 6.16v7.68C0 17.24 2.76 20 6.16 20h7.68c3.4 0 6.16-2.76 6.16-6.16V6.16C20 2.76 17.24 0 13.84 0zM14 12.39l-4-5.88V17h-4V3h4l4 5.88V3h4v14h-4v-4.61z"/>

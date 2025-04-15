@@ -1,11 +1,26 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { createClient, SupabaseClient, Provider } from '@supabase/supabase-js';
+import { useToast } from "@/components/ui/use-toast";
 
-// Supabase 클라이언트 설정
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase: SupabaseClient = createClient(supabaseUrl, supabaseKey);
+// 환경 변수 확인 및 로깅
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+console.log("Supabase URL:", supabaseUrl ? "설정됨" : "설정되지 않음");
+console.log("Supabase Key:", supabaseKey ? "설정됨" : "설정되지 않음");
+
+// Supabase 클라이언트 초기화 함수
+const initSupabase = () => {
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("Supabase URL or key is missing. Please set the environment variables.");
+    return null;
+  }
+  return createClient(supabaseUrl, supabaseKey);
+};
+
+// 조건부 Supabase 클라이언트 초기화
+const supabase: SupabaseClient | null = initSupabase();
 
 // User 타입 정의
 interface User {
@@ -28,6 +43,7 @@ interface AuthContextType {
   register: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithNaver: () => Promise<void>;
+  supabaseInitialized: boolean;
 }
 
 // 기본값으로 컨텍스트 생성
@@ -38,14 +54,26 @@ const AuthContext = createContext<AuthContextType>({
   register: async () => {},
   loginWithGoogle: async () => {},
   loginWithNaver: async () => {},
+  supabaseInitialized: false,
 });
 
 // 제공자 컴포넌트 생성
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const { toast } = useToast();
+  const supabaseInitialized = supabase !== null;
   
-  // 컴포넌트 마운트 시 사용자 세션 확인
   useEffect(() => {
+    // 환경 변수가 설정되지 않은 경우 경고 표시
+    if (!supabaseInitialized) {
+      toast({
+        title: "Supabase 설정 오류",
+        description: "Supabase URL 또는 API 키가 설정되지 않았습니다. 환경 변수를 확인해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Supabase 세션 확인
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -89,10 +117,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabaseInitialized, toast]);
 
   // 구글 로그인
   const loginWithGoogle = async () => {
+    if (!supabaseInitialized) {
+      toast({
+        title: "Supabase 설정 오류",
+        description: "Supabase가 초기화되지 않았습니다. 환경 변수를 확인해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -107,6 +144,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // 네이버 로그인
   const loginWithNaver = async () => {
+    if (!supabaseInitialized) {
+      toast({
+        title: "Supabase 설정 오류",
+        description: "Supabase가 초기화되지 않았습니다. 환경 변수를 확인해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const { error } = await supabase.auth.signInWithOAuth({
       // 네이버는 기본 Provider 타입에 없으므로 'any' 타입으로 변환
       provider: 'naver' as any,
@@ -122,6 +168,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // 회원가입 함수
   const register = async (email: string, password: string) => {
+    if (!supabaseInitialized) {
+      // 로컬 스토리지 방식으로 대체
+      const usersJson = localStorage.getItem('users') || '[]';
+      const users: UserCredential[] = JSON.parse(usersJson);
+      
+      // 이메일이 이미 존재하는지 확인
+      if (users.some(user => user.email === email)) {
+        throw new Error('이미 등록된 이메일입니다.');
+      }
+      
+      // 새 사용자 추가
+      users.push({ email, password });
+      localStorage.setItem('users', JSON.stringify(users));
+      
+      toast({
+        title: "로컬 회원가입",
+        description: "Supabase가 설정되지 않아 로컬 스토리지에 사용자 정보가 저장되었습니다.",
+      });
+      return;
+    }
+    
     const { error } = await supabase.auth.signUp({ email, password });
     
     if (error) {
@@ -144,6 +211,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // 로그인 함수
   const login = async (email: string, password: string) => {
+    if (!supabaseInitialized) {
+      // Supabase가 초기화되지 않은 경우 로컬 스토리지만 사용
+      const usersJson = localStorage.getItem('users') || '[]';
+      const users: UserCredential[] = JSON.parse(usersJson);
+      
+      // 사용자 찾기
+      const foundUser = users.find(user => user.email === email && user.password === password);
+      
+      if (!foundUser) {
+        throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
+      }
+      
+      // 사용자를 상태 및 로컬 스토리지에 저장
+      const userObj: User = { email: foundUser.email };
+      setUser(userObj);
+      localStorage.setItem('currentUser', JSON.stringify(userObj));
+      
+      toast({
+        title: "로컬 로그인",
+        description: "Supabase가 설정되지 않아 로컬 스토리지의 사용자 정보로 로그인했습니다.",
+      });
+      return;
+    }
+    
     // Supabase 로그인 시도
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     
@@ -168,8 +259,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // 로그아웃 함수
   const logout = async () => {
-    // Supabase 로그아웃
-    await supabase.auth.signOut();
+    if (supabaseInitialized) {
+      // Supabase 로그아웃
+      await supabase.auth.signOut();
+    }
     
     // 사용자 상태 및 로컬 스토리지에서 제거
     setUser(null);
@@ -177,7 +270,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, loginWithGoogle, loginWithNaver }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      logout, 
+      register, 
+      loginWithGoogle, 
+      loginWithNaver,
+      supabaseInitialized 
+    }}>
       {children}
     </AuthContext.Provider>
   );
