@@ -1,6 +1,5 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, Provider } from '@supabase/supabase-js';
 
 // Supabase 클라이언트 설정
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -39,6 +38,9 @@ const AuthContext = createContext<AuthContextType>({
   loginWithGoogle: async () => {},
   loginWithNaver: async () => {},
 });
+
+// 네이버는 기본 Provider 타입에 포함되어 있지 않으므로 string으로 타입 처리
+type CustomProvider = Provider | 'naver';
 
 // 제공자 컴포넌트 생성
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -108,7 +110,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // 네이버 로그인
   const loginWithNaver = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'naver',
+      provider: 'naver' as CustomProvider,
       options: {
         redirectTo: `${window.location.origin}/todos`
       }
