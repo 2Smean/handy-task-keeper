@@ -138,6 +138,13 @@ const Login = () => {
               </div>
             </div>
 
+            <Alert variant="default" className="bg-blue-50 border-blue-200 mb-2">
+              <AlertCircle className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-700">
+                소셜 로그인을 사용하기 위해서는 Supabase 대시보드에서 OAuth 제공자를 활성화해야 합니다.
+              </AlertDescription>
+            </Alert>
+
             <Button 
               type="button" 
               variant="outline" 
@@ -176,7 +183,7 @@ const Login = () => {
               <svg className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M13.84 0H6.16C2.76 0 0 2.76 0 6.16v7.68C0 17.24 2.76 20 6.16 20h7.68c3.4 0 6.16-2.76 6.16-6.16V6.16C20 2.76 17.24 0 13.84 0zM14 12.39l-4-5.88V17h-4V3h4l4 5.88V3h4v14h-4v-4.61z"/>
               </svg>
-              네이버로 로그인
+              네이버로 로그인(비활성화됨)
             </Button>
           </CardContent>
           <CardFooter className="flex justify-center">
