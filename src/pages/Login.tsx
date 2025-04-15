@@ -88,7 +88,7 @@ const Login = () => {
         
         {!supabaseInitialized && (
           <div className="px-6 mb-4">
-            <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
+            <Alert variant="default" className="bg-yellow-50 border-yellow-200">
               <AlertCircle className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-700">
                 Supabase 연결이 설정되지 않았습니다. 소셜 로그인은 사용할 수 없으며, 로컬 스토리지를 통한 로그인만 가능합니다.
