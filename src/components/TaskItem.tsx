@@ -1,11 +1,11 @@
-
 import { useState } from "react";
 import { Task } from "@/types/task";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Trash, Edit, Check, X } from "lucide-react";
+import { Trash, Edit, Check, X, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { estimateTaskTime } from "@/utils/timeEstimation";
 
 interface TaskItemProps {
   task: Task;
@@ -17,6 +17,8 @@ interface TaskItemProps {
 const TaskItem = ({ task, onToggleComplete, onDelete, onEdit }: TaskItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(task.title);
+  
+  const estimatedTime = estimateTaskTime(task.title);
 
   const handleEdit = () => {
     if (!isEditing) {
@@ -69,15 +71,21 @@ const TaskItem = ({ task, onToggleComplete, onDelete, onEdit }: TaskItemProps) =
             autoFocus
           />
         ) : (
-          <label 
-            htmlFor={`task-${task.id}`}
-            className={cn(
-              "ml-3 text-base select-none cursor-pointer flex-1",
-              task.completed ? "line-through text-gray-500" : ""
-            )}
-          >
-            {task.title}
-          </label>
+          <div className="flex items-center ml-3 flex-1">
+            <label 
+              htmlFor={`task-${task.id}`}
+              className={cn(
+                "text-base select-none cursor-pointer flex-1",
+                task.completed ? "line-through text-gray-500" : ""
+              )}
+            >
+              {task.title}
+            </label>
+            <div className="flex items-center text-gray-500 ml-2" title="예상 소요 시간">
+              <Clock className="h-4 w-4 mr-1" />
+              <span className="text-sm">{estimatedTime}분</span>
+            </div>
+          </div>
         )}
       </div>
       
